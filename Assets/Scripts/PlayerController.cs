@@ -29,8 +29,8 @@ public class PlayerController : MonoBehaviour
         verticalInput = Input.GetAxis("Vertical");
 
         Vector3 moveDirection = Vector3.forward * verticalInput + Vector3.right * horizontalInput;
-
-        transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
+        transform.Translate(moveDirection.normalized * moveSpeed * Time.deltaTime);
+        
         if (horizontalInput != 0 || verticalInput != 0)
         {
             playerModel.transform.rotation = Quaternion.Slerp(playerModel.transform.rotation, Quaternion.LookRotation(moveDirection), Time.deltaTime * rotationSpeed);
@@ -43,7 +43,6 @@ public class PlayerController : MonoBehaviour
             foreach (ParticleSystem particles in moveParticles)
             {
                 particles.Stop();
-                Debug.Log("Stopped particles");
             }
         }
     }
