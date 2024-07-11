@@ -7,35 +7,59 @@ public class PlayerController : MonoBehaviour
     public float horizontalInput;
     public float verticalInput;
     public Vector3 movement;
-    public float moveSpeed;
+    public float moveDiff;
+    public float acceleration;
+    public float maxMoveSpeed;
+    public float decayRate;
     public float rotationSpeed;
     public GameObject playerModel;
     public ParticleSystem[] moveParticles;
+    public GameObject cameraPivot;
 
     private Rigidbody playerRb;
     private float initialHeight;
+    public float speed;
 
-    // Start is called before the first frame update
+    public Health playerHealth;
+
     void Start()
     {
         playerRb = gameObject.GetComponent<Rigidbody>();
         initialHeight = gameObject.transform.position.y;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        MovePlayer();
+        if (!playerHealth.isDead)
+        {
+            MovePlayer();
+        }
     }
 
     void FixedUpdate()
     {
-        moveCharacter(movement);
+        //handle rb movement in FixedUpdate
+        MoveCharacter(movement);
     }
 
-    void moveCharacter(Vector3 movement)
+    void MoveCharacter(Vector3 movement)
     {
-        playerRb.velocity = movement * moveSpeed * Time.fixedDeltaTime;
+        if (movement.magnitude > 0)
+        {
+            
+            speed = Mathf.Min(speed + acceleration * Time.fixedDeltaTime,maxMoveSpeed);
+            float dirDiff = Vector3.Dot(playerRb.velocity.normalized, movement);
+            if(dirDiff < 0)
+            {
+                speed = Mathf.Max(speed + dirDiff * maxMoveSpeed, 0);
+            }
+            playerRb.velocity = movement * speed;
+        }
+        else
+        {
+            speed = Mathf.Max(speed - decayRate * Time.fixedDeltaTime, 0);
+            playerRb.velocity = speed * playerModel.transform.forward.normalized;
+        } 
     }
 
     void MovePlayer()
@@ -43,16 +67,26 @@ public class PlayerController : MonoBehaviour
         horizontalInput = Input.GetAxis("Horizontal");
         verticalInput = Input.GetAxis("Vertical");
 
-        movement = (Vector3.forward * verticalInput + Vector3.right * horizontalInput).normalized;
-        
+        Vector3 forward = cameraPivot.transform.forward;
+        Vector3 right = cameraPivot.transform.right;
+        movement = (forward * verticalInput + right * horizontalInput).normalized;
+
         if (horizontalInput != 0 || verticalInput != 0)
         {
             playerModel.transform.rotation = Quaternion.Slerp(playerModel.transform.rotation, Quaternion.LookRotation(movement), Time.deltaTime * rotationSpeed);
-            foreach(ParticleSystem particles in moveParticles)
+
+        }
+
+        if (playerRb.velocity.magnitude != 0)
+        {
+            foreach (ParticleSystem particles in moveParticles)
             {
                 particles.Play();
+                var emission = particles.emission;
+                emission.rateOverTime = 200 * (playerRb.velocity.magnitude / maxMoveSpeed);
             }
-        } else
+        }
+        else
         {
             foreach (ParticleSystem particles in moveParticles)
             {

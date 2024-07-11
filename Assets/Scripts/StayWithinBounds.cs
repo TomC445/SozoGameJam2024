@@ -13,15 +13,17 @@ public class StayWithinBounds : MonoBehaviour
     public float innerZBound;
 
     public GameObject panel;
-    private Image panelImage;
+    public GameObject minimapCover;
 
-    // Start is called before the first frame update
+    private Image panelImage;
+    private Image minimapCoverImage;
+
     void Start()
     {
         panelImage = panel.GetComponent<Image>();
+        minimapCoverImage = minimapCover.GetComponent<Image>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (Mathf.Abs(transform.position.x) > innerXBound || Mathf.Abs(transform.position.z) > innerZBound)
@@ -29,7 +31,15 @@ public class StayWithinBounds : MonoBehaviour
             float xproximity = (Mathf.Abs(transform.position.x)-innerXBound) / (outerXBound-innerXBound);
             float zproximity = (Mathf.Abs(transform.position.z)-innerZBound) / (outerZBound-innerZBound);
             float proximity = Mathf.Max(xproximity, zproximity);
-            panelImage.color = new Color(1, 1, 1, proximity);
+            if (panelImage)
+            {
+                panelImage.color = new Color(1, 1, 1, proximity);
+            }
+
+            if (minimapCover)
+            {
+                minimapCoverImage.color = new Color(1, 1, 1, proximity);
+            }
         }
 
         if(transform.position.x > xBound)

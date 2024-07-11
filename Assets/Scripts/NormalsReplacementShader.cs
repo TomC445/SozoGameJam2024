@@ -2,6 +2,7 @@
 
 public class NormalsReplacementShader : MonoBehaviour
 {
+    //normals shader for water shader
     [SerializeField]
     Shader normalsShader;
 

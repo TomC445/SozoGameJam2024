@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class CameraDepthTextureMode : MonoBehaviour 
 {
+    //set the camera depth texture mode for water shader
     [SerializeField]
     DepthTextureMode depthTextureMode;
 

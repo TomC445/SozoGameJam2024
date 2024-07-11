@@ -8,6 +8,8 @@ public class ThrowBarrel : MonoBehaviour
     public float trajectoryStrength = 5;
     public Transform projectileOffset;
     public GameObject projectilePrefab;
+    public float maxMouseStrength;
+    public float mouseStrengthModifier;
     
     private Vector3 mousePosition;
 
@@ -19,16 +21,22 @@ public class ThrowBarrel : MonoBehaviour
 
     private Vector3 lineTrajectory = Vector3.zero;
 
+    public GameObject lineRendererObj;
     private LineRenderer lineRenderer;
+    private Rigidbody playerRb;
 
+
+    public ShipSoundManager shipSoundManager;
     private void Start()
     {
-        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer = lineRendererObj.GetComponent<LineRenderer>();
+        playerRb = GetComponent<Rigidbody>();
     }
+
 
     private void Update()
     {
-        SimulatePath(transform.gameObject, lineTrajectory, projectilePrefab.GetComponent<Rigidbody>().drag);
+        SimulatePath(lineRendererObj, lineTrajectory, projectilePrefab.GetComponent<Rigidbody>().drag);
     }
 
     private void OnMouseDrag()
@@ -41,8 +49,8 @@ public class ThrowBarrel : MonoBehaviour
             //transform.position = hit.point;
             mousePosition = hit.point;
             Vector3 mouseTrajectory = transform.position - mousePosition;
-            Vector3 projectileTrajectory = new Vector3(mouseTrajectory.x, trajectoryHeight, mouseTrajectory.z).normalized;
-            float mouseStrength = new Vector3(mouseTrajectory.x, 0, mouseTrajectory.z).magnitude;
+            Vector3 projectileTrajectory = new Vector3(mouseTrajectory.x, 0, mouseTrajectory.z).normalized + Vector3.up * trajectoryHeight;
+            float mouseStrength = Mathf.Min(new Vector2(mouseTrajectory.x,mouseTrajectory.z).magnitude/mouseStrengthModifier,maxMouseStrength);
             lineTrajectory = projectileTrajectory * mouseStrength * trajectoryStrength;
         }
         
@@ -50,23 +58,21 @@ public class ThrowBarrel : MonoBehaviour
 
     private void OnMouseUp()
     {
-        Vector3 mouseTrajectory = transform.position - mousePosition;
-        Vector3 projectileTrajectory = new Vector3(mouseTrajectory.x, trajectoryHeight, mouseTrajectory.z).normalized;
-        float mouseStrength = new Vector3(mouseTrajectory.x, 0, mouseTrajectory.z).magnitude;
-
         GameObject projectile = Instantiate(projectilePrefab, projectileOffset.position, projectilePrefab.transform.rotation);
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
-        rb.AddForce(projectileTrajectory * mouseStrength * trajectoryStrength, ForceMode.Impulse);
+        rb.AddForce(lineTrajectory, ForceMode.Impulse);
         lineTrajectory = Vector3.zero;
+        shipSoundManager.PlayShoot();
     }
 
-    private void SimulatePath(GameObject obj, Vector3 forceDirection, float drag)
+    //draw path of projectile
+    private void SimulatePath(GameObject lineRendererObj, Vector3 forceDirection, float drag)
     {
         float timestep = Time.fixedDeltaTime;
         float stepDrag = 1 - drag * timestep;
         Vector3 velocity = forceDirection * timestep;
         Vector3 gravity = Physics.gravity * timestep * timestep;
-        Vector3 position = obj.transform.position;
+        Vector3 position = lineRendererObj.transform.position;
 
         if (segments == null || segments.Length != maxSegmentCount)
         {

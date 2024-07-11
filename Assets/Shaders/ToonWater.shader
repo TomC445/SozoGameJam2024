@@ -105,7 +105,8 @@
 				float surfaceNoise = smoothstep(surfaceNoiseCutoff - SMOOTHSTEP_AA, surfaceNoiseCutoff + SMOOTHSTEP_AA, surfaceNoiseSample);
 				float4 surfaceNoiseColor = _FoamColor;
 				surfaceNoiseColor.a *= surfaceNoise;
-				return alphaBlend(surfaceNoiseColor, waterColor);
+				float4 finalColor = alphaBlend(surfaceNoiseColor, waterColor);
+				return finalColor;
             }
             ENDCG
         }
